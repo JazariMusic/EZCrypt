@@ -6,13 +6,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.security.spec.InvalidParameterSpecException;
 import java.util.Arrays;
 
 import javax.crypto.Cipher;
+import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
 public class Crypto {
@@ -93,8 +94,10 @@ public class Crypto {
 
 	private static class CipherPair {
 
+		// These values cannot be changed without breaking decryption
 		private static final int IV_LENGTH = 16;
 		private static final String SALT = "CNSK971837430SJDKF934JDKSJALAJFHDA937718jfkd";
+		private static final int HASH_ITERATIONS = 500000;
 
 		private final Cipher cipher;
 
@@ -135,11 +138,15 @@ public class Crypto {
 		private CipherPair(String key, CipherMode mode, IvParameterSpec iv) {
 
 			try {
-				MessageDigest md = MessageDigest.getInstance("MD5");
-				md.update(SALT.getBytes("UTF-8"));
-				byte[] keyDigest = md.digest(key.getBytes("UTF-8"));
 
-				SecretKeySpec skeySpec = new SecretKeySpec(keyDigest, "AES");
+				// Obviously, the salt is pointless if the attacker has access
+				// to source, but we still benefit from using a slow hashing
+				// algo.
+				PBEKeySpec spec = new PBEKeySpec(key.toCharArray(), SALT.getBytes(), HASH_ITERATIONS, 128);
+				SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+				byte[] hashedKey = skf.generateSecret(spec).getEncoded();
+
+				SecretKeySpec skeySpec = new SecretKeySpec(hashedKey, "AES");
 				this.cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
 				this.cipher.init(mode.getMode(), skeySpec, iv);
 			} catch (Exception e) {
