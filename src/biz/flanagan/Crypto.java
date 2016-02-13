@@ -36,7 +36,7 @@ public class Crypto {
 		String outputName = this.mode == CipherMode.ENCRYPT ? "ENCRYPTED_" + this.inputFile.getName() : "DECRYPTED_"
 				+ this.inputFile.getName().replace("ENCRYPTED_", "");
 
-		File outputFile = new File(outputName);
+		File outputFile = new File(inputFile.getParentFile(), outputName);
 
 		OutputStream ous = null;
 		InputStream ios = null;
