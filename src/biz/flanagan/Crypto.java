@@ -31,15 +31,17 @@ public class Crypto {
 
 	public File doWork() {
 
+		// TODO better renaming that appends ENCRYPTED/DECRYPTED to the name
+		// but before the extension.
 		String outputName = this.mode == CipherMode.ENCRYPT ? "ENCRYPTED_" + this.inputFile.getName() : "DECRYPTED_"
 				+ this.inputFile.getName().replace("ENCRYPTED_", "");
 
 		File outputFile = new File(outputName);
-		
+
 		OutputStream ous = null;
 		InputStream ios = null;
 		try {
-			
+
 			byte[] buffer = new byte[BUFFER_SIZE];
 			ous = new FileOutputStream(outputFile);
 			ios = new FileInputStream(this.inputFile);
@@ -67,7 +69,6 @@ public class Crypto {
 					ous.close();
 			} catch (IOException e) {
 			}
-
 			try {
 				if (ios != null)
 					ios.close();
@@ -80,18 +81,18 @@ public class Crypto {
 		ENCRYPT(Cipher.ENCRYPT_MODE), DECRYPT(Cipher.DECRYPT_MODE);
 
 		private final int mode;
-		 
+
 		CipherMode(int mode) {
 			this.mode = mode;
 		}
-		
+
 		public int getMode() {
 			return this.mode;
 		}
 	}
-	
+
 	private static class CipherPair {
-		
+
 		private static final int IV_LENGTH = 16;
 		private static final String SALT = "CNSK971837430SJDKF934JDKSJALAJFHDA937718jfkd";
 
@@ -100,7 +101,6 @@ public class Crypto {
 		public static CipherPair createCipher(String key, CipherMode mode, InputStream ios) {
 
 			switch (mode) {
-
 			case ENCRYPT:
 				return createEncryptionCipherPair(key);
 			case DECRYPT:
@@ -135,14 +135,13 @@ public class Crypto {
 		private CipherPair(String key, CipherMode mode, IvParameterSpec iv) {
 
 			try {
-			MessageDigest md = MessageDigest.getInstance("MD5");
-			md.update(SALT.getBytes("UTF-8"));
-			byte[] keyDigest = md.digest(key.getBytes("UTF-8"));
+				MessageDigest md = MessageDigest.getInstance("MD5");
+				md.update(SALT.getBytes("UTF-8"));
+				byte[] keyDigest = md.digest(key.getBytes("UTF-8"));
 
-			SecretKeySpec skeySpec = new SecretKeySpec(keyDigest,
-					"AES");
-			this.cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
-			this.cipher.init(mode.getMode(), skeySpec, iv);
+				SecretKeySpec skeySpec = new SecretKeySpec(keyDigest, "AES");
+				this.cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
+				this.cipher.init(mode.getMode(), skeySpec, iv);
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
@@ -171,7 +170,7 @@ public class Crypto {
 	public static void main(String[] args) {
 		// Validate args
 		validate(args);
-		
+
 		CipherMode mode;
 		if (args[0].equals("-e")) {
 			mode = CipherMode.ENCRYPT;
@@ -198,11 +197,11 @@ public class Crypto {
 
 	private static void printUsage() {
 		System.out
-				.println("Bad arguments. Usage: \"java -jar EZCrypt.jar [-e/-d] [filename] [password]\"");
+.println("Bad arguments. Usage: \"java -jar EZCrypt.jar [-e/-d] [filename] [password]\"");
 		System.out
-				.println("Example encryption: java -jar EZCrypt.jar -e secrets.txt my_password");
+.println("Example encryption: java -jar EZCrypt.jar -e secrets.txt my_password");
 		System.out
-				.println("Example decryption: java -jar EZCrypt.jar -d secrets_ENC.txt my_password");
+.println("Example decryption: java -jar EZCrypt.jar -d secrets_ENC.txt my_password");
 		System.exit(1);
 	}
 }
